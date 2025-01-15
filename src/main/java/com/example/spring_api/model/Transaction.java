@@ -2,6 +2,7 @@ package com.example.spring_api.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 public class Transaction {
@@ -10,12 +11,15 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Double amount;
-
     private String description;
 
+    @NotNull(message = "Amount is required")
+    private Double amount;
+
+    @NotNull(message = "Transaction date is required")
     private LocalDate transactionDate;
 
+    @NotNull(message = "Schedule date is required")
     private LocalDate scheduleDate;
 
     private Double transferFee;

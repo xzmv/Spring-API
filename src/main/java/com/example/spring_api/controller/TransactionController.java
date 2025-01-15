@@ -2,6 +2,7 @@ package com.example.spring_api.controller;
 
 import com.example.spring_api.model.Transaction;
 import com.example.spring_api.services.TransactionService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class TransactionController {
     }
 
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@RequestBody Transaction transaction) {
+    public ResponseEntity<Transaction> createTransaction(@Valid @RequestBody Transaction transaction) {
         return new ResponseEntity<>(service.createTransaction(transaction), HttpStatus.CREATED);
     }
 
