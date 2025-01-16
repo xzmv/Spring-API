@@ -46,19 +46,33 @@ public class TransactionService {
     public void deleteTransaction(Long id) {
         repository.deleteById(id);
     }
-
     private Double calculateFee(Transaction transaction) {
         Double amount = transaction.getAmount();
         LocalDate transactionDate = transaction.getTransactionDate();
         LocalDate scheduleDate = transaction.getScheduleDate();
 
+        // Validate input
+        if (amount == null || amount <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than 0.");
+        }
+        if (transactionDate == null || scheduleDate == null) {
+            throw new IllegalArgumentException("Transaction date and schedule date must not be null.");
+        }
+
         long daysBetween = ChronoUnit.DAYS.between(transactionDate, scheduleDate);
 
+        // Fee A: Same-day transactions, amount <= 1000
         if (amount <= 1000.0 && daysBetween == 0) {
             return (amount * 0.03) + 3.0;
-        } else if (amount <= 2000.0 && daysBetween >= 1 && daysBetween <= 10) {
+        }
+
+        // Fee B: Transactions 1–10 days, amount <= 2000
+        if (amount <= 2000.0 && daysBetween >= 1 && daysBetween <= 10) {
             return amount * 0.09;
-        } else if (amount > 2000.0) {
+        }
+
+        // Fee C: Transactions > 2000
+        if (amount > 2000.0) {
             if (daysBetween >= 11 && daysBetween <= 20) {
                 return amount * 0.082;
             } else if (daysBetween >= 21 && daysBetween <= 30) {
@@ -67,6 +81,9 @@ public class TransactionService {
                 return amount * 0.047;
             } else if (daysBetween > 40) {
                 return amount * 0.017;
+            } else {
+                // Explicitly handle cases where daysBetween < 11
+                throw new IllegalArgumentException("For transactions above 2000, the scheduling date must be at least 11 days after the transaction date.");
             }
         }
         throw new IllegalArgumentException("Invalid scheduling date or amount");

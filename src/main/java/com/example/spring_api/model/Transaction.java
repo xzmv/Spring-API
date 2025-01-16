@@ -14,8 +14,9 @@ public class Transaction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Schema(description = "Unique identifier of the transaction", example = "1")
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY, description = "Unique identifier of the transaction", example = "1")
     private Long id;
+
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
@@ -34,7 +35,7 @@ public class Transaction {
     @Schema(description = "Additional details about the transaction", example = "Payment for services")
     private String description;
 
-    @Schema(description = "Calculated transfer fee based on scheduling rules", example = "45.0")
+    @Schema(description = "Calculated transfer fee based on scheduling rules", example = "45.0", accessMode = Schema.AccessMode.READ_ONLY)
     private Double transferFee;
 
     // Getters and Setters

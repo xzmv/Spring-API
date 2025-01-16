@@ -27,13 +27,51 @@ public class TransactionController {
     @Operation(summary = "Create a new transaction", description = "Adds a new transaction and calculates the transfer fee based on scheduling rules.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Transaction created successfully",
-                    content = @Content(schema = @Schema(implementation = Transaction.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid transaction data")
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = Transaction.class),
+                            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                    value = """
+                                        {
+                                          "id": 1,
+                                          "amount": 1500,
+                                          "transactionDate": "2025-01-15",
+                                          "scheduleDate": "2025-01-20",
+                                          "description": "Payment for services",
+                                          "transferFee": 135.0
+                                        }
+                                        """
+                            ))),
+            @ApiResponse(responseCode = "400", description = "Invalid transaction data",
+                    content = @Content(mediaType = "application/json",
+                            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                    value = """
+                                        {
+                                          "error": "Transaction date must be on or before the schedule date"
+                                        }
+                                        """
+                            ))),
+            @ApiResponse(responseCode = "409", description = "Transaction with ID null",
+                    content = @Content(mediaType = "application/json",
+                            examples = @io.swagger.v3.oas.annotations.media.ExampleObject(
+                                    value = """
+                                        {
+                                          "error": "Transaction with this ID already exists."
+                                        }
+                                        """
+                            )))
     })
     @PostMapping
-    public ResponseEntity<Transaction> createTransaction(@Valid @RequestBody Transaction transaction) {
-        return new ResponseEntity<>(service.createTransaction(transaction), HttpStatus.CREATED);
+    public ResponseEntity<?> createTransaction(@Valid @RequestBody Transaction transaction) {
+        if (transaction.getId() != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body("Transaction with ID null.");
+        }
+        if (transaction.getTransactionDate().isAfter(transaction.getScheduleDate())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Transaction date must be on or before the schedule date.");
+        }
+        Transaction createdTransaction = service.createTransaction(transaction);
+        return new ResponseEntity<>(createdTransaction, HttpStatus.CREATED);
     }
+
 
     @Operation(summary = "Get a transaction by ID", description = "Fetches the details of a transaction using its ID.")
     @ApiResponses(value = {
