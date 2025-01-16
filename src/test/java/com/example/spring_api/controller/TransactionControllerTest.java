@@ -1,11 +1,13 @@
 package com.example.spring_api.controller;
 
+import com.example.spring_api.exception.ResourceNotFoundException;
 import com.example.spring_api.model.Transaction;
 import com.example.spring_api.services.TransactionService;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -21,6 +23,7 @@ class TransactionControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @MockBean
     private TransactionService service;
 
     @Test
@@ -69,7 +72,7 @@ class TransactionControllerTest {
     @Test
     void testReturn404WhenTransactionNotFound() throws Exception {
         // Arrange
-        when(service.getTransactionById(1L)).thenThrow(new RuntimeException("Transaction not found"));
+        when(service.getTransactionById(1L)).thenThrow(new ResourceNotFoundException("Transaction not found"));
 
         // Act & Assert
         mockMvc.perform(get("/transactions/1")
@@ -79,6 +82,7 @@ class TransactionControllerTest {
 
         verify(service, times(1)).getTransactionById(1L);
     }
+
 
 
     @Test
@@ -106,11 +110,15 @@ class TransactionControllerTest {
         // Act & Assert
         mockMvc.perform(post("/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}")) // Empty body
-                .andExpect(status().isBadRequest());
+                        .content("{}")) // Empty JSON body
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.amount", is("Amount is required")))
+                .andExpect(jsonPath("$.transactionDate", is("Transaction date is required")))
+                .andExpect(jsonPath("$.scheduleDate", is("Schedule date is required")));
 
         verify(service, times(0)).createTransaction(Mockito.any(Transaction.class));
     }
+
 
     @Test
     void testUpdateTransaction() throws Exception {

@@ -2,7 +2,10 @@ package com.example.spring_api.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 @Entity
 public class Transaction {
@@ -11,9 +14,8 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String description;
-
     @NotNull(message = "Amount is required")
+    @DecimalMin(value = "0.01", message = "Amount must be greater than 0")
     private Double amount;
 
     @NotNull(message = "Transaction date is required")
@@ -21,6 +23,9 @@ public class Transaction {
 
     @NotNull(message = "Schedule date is required")
     private LocalDate scheduleDate;
+
+    @Size(max = 255, message = "Description must not exceed 255 characters")
+    private String description;
 
     private Double transferFee;
 
