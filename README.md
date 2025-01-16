@@ -1,5 +1,3 @@
-Here’s the updated `README.md` without the Postman section, emphasizing Swagger as the primary tool for testing.
-
 ---
 
 # Spring-API
@@ -167,8 +165,6 @@ mvn test
 - **Git**
 - **GitHub**
 - **IntelliJ IDEA**
-
-Here is the updated section for your README.md file, integrating the images provided:
 
 ---
 
