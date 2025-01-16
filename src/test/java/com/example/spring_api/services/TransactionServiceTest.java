@@ -3,8 +3,8 @@ package com.example.spring_api.services;
 import org.junit.jupiter.api.Test;
 import com.example.spring_api.model.Transaction;
 import com.example.spring_api.repository.TransactionRepository;
-import java.util.List;
-import java.util.Optional;
+
+import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -15,11 +15,12 @@ class TransactionServiceTest {
     private final TransactionService service = new TransactionService(repository);
 
     @Test
-    void testCreateTransaction() {
+    void testCalculateFeeForSameDayTransaction() {
         // Arrange
         Transaction transaction = new Transaction();
         transaction.setAmount(1000.0);
-        transaction.setDescription("Test Transaction");
+        transaction.setTransactionDate(LocalDate.now());
+        transaction.setScheduleDate(LocalDate.now());
 
         when(repository.save(transaction)).thenReturn(transaction);
 
@@ -27,77 +28,84 @@ class TransactionServiceTest {
         Transaction createdTransaction = service.createTransaction(transaction);
 
         // Assert
-        assertThat(createdTransaction.getDescription()).isEqualTo("Test Transaction");
+        Double expectedFee = (1000.0 * 0.03) + 3.0;
+        assertThat(createdTransaction.getTransferFee()).isEqualTo(expectedFee);
         verify(repository, times(1)).save(transaction);
     }
 
     @Test
-    void testGetTransactionById() {
+    void testCalculateFeeFor1To10DaysTransaction() {
         // Arrange
         Transaction transaction = new Transaction();
-        transaction.setId(1L);
-        transaction.setDescription("Test Transaction");
+        transaction.setAmount(1500.0);
+        transaction.setTransactionDate(LocalDate.now());
+        transaction.setScheduleDate(LocalDate.now().plusDays(5));
 
-        when(repository.findById(1L)).thenReturn(Optional.of(transaction));
+        when(repository.save(transaction)).thenReturn(transaction);
 
         // Act
-        Transaction retrievedTransaction = service.getTransactionById(1L);
+        Transaction createdTransaction = service.createTransaction(transaction);
 
         // Assert
-        assertThat(retrievedTransaction.getDescription()).isEqualTo("Test Transaction");
-        verify(repository, times(1)).findById(1L);
+        Double expectedFee = 1500.0 * 0.09;
+        assertThat(createdTransaction.getTransferFee()).isEqualTo(expectedFee);
+        verify(repository, times(1)).save(transaction);
     }
 
     @Test
-    void testGetAllTransactions() {
+    void testCalculateFeeFor11To20DaysTransaction() {
         // Arrange
-        Transaction transaction1 = new Transaction();
-        transaction1.setId(1L);
-        transaction1.setDescription("Transaction 1");
+        Transaction transaction = new Transaction();
+        transaction.setAmount(2500.0);
+        transaction.setTransactionDate(LocalDate.now());
+        transaction.setScheduleDate(LocalDate.now().plusDays(15));
 
-        Transaction transaction2 = new Transaction();
-        transaction2.setId(2L);
-        transaction2.setDescription("Transaction 2");
-
-        when(repository.findAll()).thenReturn(List.of(transaction1, transaction2));
+        when(repository.save(transaction)).thenReturn(transaction);
 
         // Act
-        List<Transaction> transactions = service.getAllTransactions();
+        Transaction createdTransaction = service.createTransaction(transaction);
 
         // Assert
-        assertThat(transactions).hasSize(2);
-        assertThat(transactions.get(0).getDescription()).isEqualTo("Transaction 1");
-        assertThat(transactions.get(1).getDescription()).isEqualTo("Transaction 2");
-        verify(repository, times(1)).findAll();
+        Double expectedFee = 2500.0 * 0.082;
+        assertThat(createdTransaction.getTransferFee()).isEqualTo(expectedFee);
+        verify(repository, times(1)).save(transaction);
     }
 
     @Test
-    void testUpdateTransaction() {
+    void testCalculateFeeFor21To30DaysTransaction() {
         // Arrange
-        Transaction existingTransaction = new Transaction();
-        existingTransaction.setId(1L);
-        existingTransaction.setDescription("Old Description");
+        Transaction transaction = new Transaction();
+        transaction.setAmount(2500.0);
+        transaction.setTransactionDate(LocalDate.now());
+        transaction.setScheduleDate(LocalDate.now().plusDays(25));
 
-        Transaction updatedTransaction = new Transaction();
-        updatedTransaction.setDescription("New Description");
-
-        when(repository.findById(1L)).thenReturn(Optional.of(existingTransaction));
-        when(repository.save(existingTransaction)).thenReturn(existingTransaction);
+        when(repository.save(transaction)).thenReturn(transaction);
 
         // Act
-        Transaction result = service.updateTransaction(1L, updatedTransaction);
+        Transaction createdTransaction = service.createTransaction(transaction);
 
         // Assert
-        assertThat(result.getDescription()).isEqualTo("New Description");
-        verify(repository, times(1)).save(existingTransaction);
+        Double expectedFee = 2500.0 * 0.069;
+        assertThat(createdTransaction.getTransferFee()).isEqualTo(expectedFee);
+        verify(repository, times(1)).save(transaction);
     }
 
     @Test
-    void testDeleteTransaction() {
+    void testCalculateFeeForMoreThan40DaysTransaction() {
+        // Arrange
+        Transaction transaction = new Transaction();
+        transaction.setAmount(3000.0);
+        transaction.setTransactionDate(LocalDate.now());
+        transaction.setScheduleDate(LocalDate.now().plusDays(45));
+
+        when(repository.save(transaction)).thenReturn(transaction);
+
         // Act
-        service.deleteTransaction(1L);
+        Transaction createdTransaction = service.createTransaction(transaction);
 
         // Assert
-        verify(repository, times(1)).deleteById(1L);
+        Double expectedFee = 3000.0 * 0.017;
+        assertThat(createdTransaction.getTransferFee()).isEqualTo(expectedFee);
+        verify(repository, times(1)).save(transaction);
     }
 }
