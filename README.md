@@ -192,8 +192,6 @@ mvn test
 
 ---
 
-Replace the placeholder file paths with the exact directory if necessary and commit these changes to your repository. Let me know if further updates are needed!
-
 ## Author
 
 This project was created by **Alfonso Villanueva**. 
